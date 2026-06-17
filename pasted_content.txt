@@ -1,0 +1,385 @@
+# PROJECT REQUIREMENTS DOCUMENT (PRD)
+
+## Project Name
+
+Sari-Sari Store POS System
+
+## Objective
+
+Build a complete Point of Sale (POS) web application for a Filipino sari-sari store using Vanilla HTML, CSS, JavaScript, Node.js, Express, and SQLite. The system must work offline on a local computer and store all data in a local SQLite database.
+
+---
+
+## Technology Stack
+
+### Frontend
+
+* HTML5
+* CSS3
+* Vanilla JavaScript
+* Responsive Mobile-First Design
+
+### Backend
+
+* Node.js
+* Express.js
+
+### Database
+
+* SQLite
+
+### Deployment
+
+* Localhost Deployment
+* No Internet Required
+* Runs on Windows PC
+
+---
+
+## Core Features
+
+### 1. Dashboard
+
+Display:
+
+* Today's Sales
+* Weekly Sales
+* Monthly Sales
+* Total Products
+* Low Stock Items
+* Recent Transactions
+* Best Selling Products
+
+### 2. Product Management
+
+Functions:
+
+* Add Product
+* Edit Product
+* Delete Product
+* Search Product
+* Product Categories
+* Barcode Support
+* Product Image Upload
+
+Product Fields:
+
+* Product ID
+* Barcode
+* Product Name
+* Category
+* Cost Price
+* Selling Price
+* Stock Quantity
+* Reorder Level
+* Product Image
+
+### 3. POS / Cashier Screen
+
+Features:
+
+* Fast Product Search
+* Barcode Scanner Input
+* Add to Cart
+* Update Quantity
+* Remove Item
+* Calculate Change
+* Print Receipt
+* Discount Support
+* Multiple Payment Methods
+
+Payment Methods:
+
+* Cash
+* GCash
+* Maya
+
+Receipt Information:
+
+* Store Name
+* Date & Time
+* Products Purchased
+* Quantity
+* Price
+* Total Amount
+* Payment Method
+* Change
+
+### 4. Inventory Management
+
+Functions:
+
+* Stock In
+* Stock Out
+* Inventory Adjustment
+* Low Stock Alerts
+* Inventory History
+
+### 5. Sales Management
+
+Features:
+
+* Daily Sales Report
+* Weekly Sales Report
+* Monthly Sales Report
+* Product Sales Report
+* Category Sales Report
+
+### 6. Customer Management
+
+Fields:
+
+* Customer Name
+* Contact Number
+* Address
+
+Functions:
+
+* Add Customer
+* Edit Customer
+* View Purchase History
+
+### 7. Supplier Management
+
+Fields:
+
+* Supplier Name
+* Contact Person
+* Phone Number
+* Address
+
+Functions:
+
+* Add Supplier
+* Edit Supplier
+* Delete Supplier
+
+### 8. Expenses Tracking
+
+Track:
+
+* Electricity
+* Water
+* Internet
+* Supplies
+* Other Expenses
+
+Reports:
+
+* Daily Expenses
+* Monthly Expenses
+* Profit Calculation
+
+### 9. User Authentication
+
+Roles:
+
+#### Admin
+
+* Full Access
+
+#### Cashier
+
+* POS Access
+* View Products
+* Create Sales
+
+Authentication:
+
+* Login Page
+* Logout
+* Session Management
+* Password Hashing
+
+---
+
+## Database Structure (SQLite)
+
+### users
+
+* id
+* username
+* password_hash
+* role
+* created_at
+
+### products
+
+* id
+* barcode
+* name
+* category
+* cost_price
+* selling_price
+* stock
+* reorder_level
+* image
+* created_at
+
+### sales
+
+* id
+* total_amount
+* payment_method
+* cashier_id
+* created_at
+
+### sale_items
+
+* id
+* sale_id
+* product_id
+* quantity
+* price
+
+### customers
+
+* id
+* name
+* phone
+* address
+
+### suppliers
+
+* id
+* name
+* contact_person
+* phone
+* address
+
+### inventory_logs
+
+* id
+* product_id
+* action
+* quantity
+* remarks
+* created_at
+
+### expenses
+
+* id
+* category
+* description
+* amount
+* created_at
+
+---
+
+## User Interface Requirements
+
+### Design Style
+
+* Clean Modern POS Layout
+* Mobile-First
+* Touch-Friendly Buttons
+* Fast Navigation
+* Professional Store Theme
+
+### Color Scheme
+
+* Primary: Green (#22C55E)
+* Secondary: White
+* Accent: Orange (#F97316)
+
+### Responsive Screens
+
+* Mobile Phones
+* Tablets
+* Laptops
+* Desktop PCs
+
+---
+
+## Additional Features
+
+### Backup System
+
+* Export SQLite Database
+* Import Database Backup
+
+### Reports Export
+
+* Export PDF
+* Export Excel
+
+### Receipt Printing
+
+* Thermal Receipt Compatible
+* 58mm Receipt Format
+
+### Search & Filtering
+
+* Product Search
+* Sales Search
+* Inventory Search
+
+---
+
+## Project Structure
+
+/client
+
+* index.html
+* login.html
+* products.html
+* pos.html
+* inventory.html
+* reports.html
+* customers.html
+* suppliers.html
+* expenses.html
+* settings.html
+
+/client/css
+
+* style.css
+* dashboard.css
+* pos.css
+
+/client/js
+
+* app.js
+* pos.js
+* products.js
+* reports.js
+
+/server
+
+* server.js
+* routes/
+* controllers/
+* middleware/
+
+/database
+
+* database.sqlite
+* schema.sql
+
+/uploads
+
+* product-images/
+
+---
+
+## Deliverables
+
+Generate a complete production-ready project including:
+
+1. Full Frontend (HTML, CSS, JavaScript)
+2. Express Backend API
+3. SQLite Database Integration
+4. Authentication System
+5. POS Module
+6. Inventory Module
+7. Reporting Module
+8. Receipt Printing
+9. Backup & Restore System
+10. Responsive Mobile Design
+
+The final output must be fully functional, organized, and ready to run locally using:
+
+npm install
+npm start
+
+No frameworks such as React, Vue, Angular, Bootstrap, or Tailwind. Use only Vanilla HTML, CSS, JavaScript, Express.js, and SQLite.

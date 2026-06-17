@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sari-Sari Store POS System</title>
+    <link rel="stylesheet" href="css/style.css">
+
+
+
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <!-- Navigation Sidebar -->
+        <nav>
+            <div class="logo">Sari-Sari Store</div>
+
+            <ul>
+                <li><a href="#" data-page="dashboard" class="active">📊 Dashboard</a></li>
+            </ul>
+
+            <div class="nav-section-title">Operations</div>
+            <ul>
+                <li><a href="#" data-page="pos">🛒 POS / Cashier</a></li>
+                <li><a href="#" data-page="inventory">📦 Inventory</a></li>
+                <li><a href="#" data-page="sales">📈 Sales Report</a></li>
+            </ul>
+
+            <div class="nav-section-title">Management</div>
+            <ul>
+                <li><a href="#" data-page="products">🏷️ Products</a></li>
+                <li><a href="#" data-page="customers">👥 Customers</a></li>
+                <li><a href="#" data-page="suppliers">🚚 Suppliers</a></li>
+                <li><a href="#" data-page="expenses">💰 Expenses</a></li>
+            </ul>
+
+            <div class="nav-section-title">Admin</div>
+            <ul>
+                <li><a href="#" data-page="users">👤 Users</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+
+            <header>
+
+                <div class="header-title" id="pageTitle">Dashboard</div>
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <div>
+                            <div id="username">Admin</div>
+                            <small id="userRole">Administrator</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" id="logoutBtn">Logout</button>
+                    <button class="btn btn-primary" id="mobileMenuTrigger" onclick="toggleMobileSidebar()">☰</button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content" id="content">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stockInModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3>📦 Stock In (Add Stock)</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="stockInForm">
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px;">Select Product</label>
+                    <select id="stockInProduct" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" required></select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px;">Quantity to Add</label>
+                    <input type="number" id="stockInQty" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" min="1" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:4px;">Remarks</label>
+                    <input type="text" id="stockInRemarks" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="e.g., Supplier Delivery">
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('stockInModal').style.display='none'" style="padding:8px 12px; cursor:pointer;">Cancel</button>
+                    <button type="submit" style="background:#22C55E; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="stockOutModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3>📤 Stock Out (Reduce Stock)</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="stockOutForm">
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px;">Select Product</label>
+                    <select id="stockOutProduct" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" required></select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px;">Quantity to Remove</label>
+                    <input type="number" id="stockOutQty" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" min="1" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:4px;">Remarks</label>
+                    <input type="text" id="stockOutFormRemarks" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="e.g., Expired / Damaged" required>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('stockOutModal').style.display='none'" style="padding:8px 12px; cursor:pointer;">Cancel</button>
+                    <button type="submit" style="background:#EF4444; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="adjustmentModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3>🔄 Inventory Audit Adjustment</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="adjustmentForm">
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px;">Select Product</label>
+                    <select id="adjustmentProduct" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" required></select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px;">Actual Physical Count (New Total Stock)</label>
+                    <input type="number" id="adjustmentQty" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" min="0" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:4px;">Reason for Correction</label>
+                    <input type="text" id="adjustmentRemarks" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;" placeholder="e.g., Audit Correction" required>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('adjustmentModal').style.display='none'" style="padding:8px 12px; cursor:pointer;">Cancel</button>
+                    <button type="submit" style="background:#F97316; color:white; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Adjust Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="productModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 450px;">
+            <h3 id="productModalTitle">🏷️ Add New Product</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Barcode (Optional)</label>
+                    <input type="text" id="productBarcode" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Product Name</label>
+                    <input type="text" id="productName" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Category</label>
+                    <input type="text" id="productCategory" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="e.g., Snacks, Drinks, Canned Goods" required>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom:2px;">Cost Price (₱)</label>
+                        <input type="number" step="0.01" id="productCostPrice" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom:2px;">Selling Price (₱)</label>
+                        <input type="number" step="0.01" id="productSellingPrice" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom:2px;">Initial Stock</label>
+                        <input type="number" id="productStock" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" value="0" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display:block; margin-bottom:2px;">Reorder Level</label>
+                        <input type="number" id="productReorder" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" value="10" required>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('productModal').style.display='none'" style="padding:6px 12px;">Cancel</button>
+                    <button type="submit" style="background:#22C55E; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="customerModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3 id="customerModalTitle">👥 Add New Customer</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="customerForm">
+                <input type="hidden" id="customerId">
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Full Name</label>
+                    <input type="text" id="customerName" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Phone Number</label>
+                    <input type="text" id="customerPhone" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:2px;">Address</label>
+                    <input type="text" id="customerAddress" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('customerModal').style.display='none'" style="padding:6px 12px;">Cancel</button>
+                    <button type="submit" style="background:#22C55E; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="supplierModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3 id="supplierModalTitle">🚚 Add New Supplier</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="supplierForm">
+                <input type="hidden" id="supplierId">
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Supplier / Company Name</label>
+                    <input type="text" id="supplierName" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Contact Person</label>
+                    <input type="text" id="supplierContact" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Phone Number</label>
+                    <input type="text" id="supplierPhone" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:2px;">Address</label>
+                    <input type="text" id="supplierAddress" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('supplierModal').style.display='none'" style="padding:6px 12px;">Cancel</button>
+                    <button type="submit" style="background:#22C55E; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Save Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="expenseModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3 id="expenseModalTitle">💰 Record New Expense</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="expenseForm">
+                <input type="hidden" id="expenseId">
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Category</label>
+                    <select id="expenseCategory" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                    <option value="Electricity">Electricity / Water Utility</option>
+                    <option value="Rent">Store Rental</option>
+                    <option value="Transportation">Fare / Delivery Logistics</option>
+                    <option value="Permits">Business Permits / Taxes</option>
+                    <option value="Others">Others</option>
+                </select>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Cost Amount (₱)</label>
+                    <input type="number" step="0.01" id="expenseAmount" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:2px;">Description / Details</label>
+                    <input type="text" id="expenseDesc" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="e.g., Electric bill for June" required>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('expenseModal').style.display='none'" style="padding:6px 12px;">Cancel</button>
+                    <button type="submit" style="background:#22C55E; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="userModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 25px; border-radius: 8px; width: 400px;">
+            <h3 id="userModalTitle">👤 Create User Account</h3>
+            <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Username</label>
+                    <input type="text" id="userUsername" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display:block; margin-bottom:2px;">Password</label>
+                    <input type="password" id="userPassword" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="Leave blank to preserve old password">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:2px;">Account Access Role</label>
+                    <select id="userRoleSelect" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                    <option value="cashier">Cashier</option>
+                    <option value="admin">Administrator</option>
+                </select>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" onclick="document.getElementById('userModal').style.display='none'" style="padding:6px 12px;">Cancel</button>
+                    <button type="submit" style="background:#22C55E; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer;">Save Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
