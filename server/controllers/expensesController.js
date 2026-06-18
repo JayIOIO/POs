@@ -134,41 +134,55 @@ const deleteExpense = async(req, res) => {
     }
 };
 
-// Get profit calculation
+// Get profit calculation for ANY custom date range
 const getProfitCalculation = async(req, res) => {
     try {
-        const { period } = req.query;
+        const { start_date, end_date } = req.query;
 
-        let dateCondition = "DATE(created_at) = DATE('now')";
-
-        if (period === 'weekly') {
-            dateCondition = "DATE(created_at) >= DATE('now', '-7 days')";
-        } else if (period === 'monthly') {
-            dateCondition = "strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')";
+        if (!start_date || !end_date) {
+            return res.status(400).json({ error: 'Start date and end date parameters are required' });
         }
 
-        const sales = await dbGet(
-            `SELECT SUM(total_amount) as total_sales FROM sales WHERE ${dateCondition}`
-        );
+        // 1. Calculate Gross Revenue and true Wholesale Inventory Cost (COGS) for this timeframe
+        const salesMetrics = await dbGet(`
+            SELECT 
+                SUM(si.quantity * si.price) AS total_sales,
+                SUM(si.quantity * p.cost_price) AS total_cogs
+            FROM sale_items si
+            JOIN products p ON si.product_id = p.id
+            JOIN sales s ON si.sale_id = s.id
+            WHERE DATE(s.created_at) BETWEEN ? AND ?
+        `, [start_date, end_date]);
 
-        const expenses = await dbGet(
-            `SELECT SUM(amount) as total_expenses FROM expenses WHERE ${dateCondition}`
-        );
+        // 2. Fetch the overhead operating expenses matching the same timeframe
+        const expensesMetrics = await dbGet(`
+            SELECT SUM(amount) AS total_expenses 
+            FROM expenses 
+            WHERE DATE(created_at) BETWEEN ? AND ?
+        `, [start_date, end_date]);
 
-        const totalSales = sales.total_sales || 0;
-        const totalExpenses = expenses.total_expenses || 0;
-        const profit = totalSales - totalExpenses;
+        const totalSales = salesMetrics.total_sales || 0;
+        const totalCogs = salesMetrics.total_cogs || 0;
+        const totalExpenses = expensesMetrics.total_expenses || 0;
+
+        // 3. Formula: Sales - Cost of Goods Sold - Expenses
+        const netProfit = totalSales - totalCogs - totalExpenses;
 
         res.json({
+            success: true,
+            start_date,
+            end_date,
             total_sales: totalSales,
+            total_cogs: totalCogs,
             total_expenses: totalExpenses,
-            profit: profit
+            profit: netProfit
         });
     } catch (error) {
-        console.error('Error calculating profit:', error);
+        console.error('Error calculating range profit details:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
+
 
 module.exports = {
     getAllExpenses,

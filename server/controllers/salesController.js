@@ -1,6 +1,6 @@
 const { dbGet, dbRun, dbAll } = require('../database.js');
 
-// Create sale
+// Updated Create sale with Bundle Logic
 const createSale = async(req, res) => {
     try {
         const { items, total_amount, payment_method, discount } = req.body;
@@ -10,17 +10,32 @@ const createSale = async(req, res) => {
             return res.status(400).json({ error: 'No items in sale' });
         }
 
-        // Insert sale
+        // 1. Insert sale record
         const saleResult = await dbRun(
             'INSERT INTO sales (total_amount, payment_method, cashier_id, discount) VALUES (?, ?, ?, ?)', [total_amount, payment_method, cashier_id, discount || 0]
         );
-
         const saleId = saleResult.id;
 
-        // Insert sale items and update stock
+        // 2. Loop through items to calculate and save
         for (const item of items) {
+            // Fetch fresh data from DB to ensure bundle rules are applied
+            const product = await dbGet('SELECT * FROM products WHERE id = ?', [item.product_id]);
+
+            let finalPrice = item.price; // fallback to frontend price
+
+            // Apply Bundle Logic if active
+            if (product && product.has_bundle_promo === 1 && item.quantity >= product.bundle_qty) {
+                const bundlesCount = Math.floor(item.quantity / product.bundle_qty);
+                const loosePieces = item.quantity % product.bundle_qty;
+
+                // Calculate total based on bundle price
+                const bundleTotal = (bundlesCount * product.bundle_price) + (loosePieces * product.selling_price);
+                finalPrice = bundleTotal / item.quantity; // Store as effective unit price
+            }
+
+            // Insert into sale_items using the calculated finalPrice
             await dbRun(
-                'INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES (?, ?, ?, ?)', [saleId, item.product_id, item.quantity, item.price]
+                'INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES (?, ?, ?, ?)', [saleId, item.product_id, item.quantity, finalPrice]
             );
 
             // Update product stock
@@ -34,10 +49,7 @@ const createSale = async(req, res) => {
             );
         }
 
-        res.json({
-            success: true,
-            saleId: saleId
-        });
+        res.json({ success: true, saleId: saleId });
     } catch (error) {
         console.error('Error creating sale:', error);
         res.status(500).json({ error: 'Server error' });

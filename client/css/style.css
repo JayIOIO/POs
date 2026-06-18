@@ -361,6 +361,13 @@ textarea {
 }
 
 
+/* Optimization rule to keep row rendering pipelines efficient on phones */
+
+.table tr {
+    contain: content;
+}
+
+
 /* Grid */
 
 .grid {
@@ -743,40 +750,215 @@ textarea {
 }
 
 
-/* =======================================================
-   📱 MOBILE VIEWPORT CONFIGURATION (768px wide or less)
-   ======================================================= */
+/* ==========================================================================
+   📱 CONSOLIDATED MOBILE OPTIMIZATIONS (Applies to 768px screens and down)
+   ========================================================================== */
 
 @media screen and (max-width: 768px) {
-    /* 1. Reveal the hamburger trigger button inside the header */
+    /* 1. Reveal Hamburger Trigger */
     #mobileMenuTrigger {
         display: block !important;
     }
-    /* 2. Reposition your <nav> sidebar into an off-screen drawer panel */
+    /* 2. Fixed Off-screen Sliding Drawer (Consolidated from .sidebar conflicts) */
     nav {
         position: fixed !important;
         top: 0 !important;
         left: -280px !important;
-        /* Kept fully off-screen */
+        /* Fully hidden offscreen */
         width: 250px !important;
         height: 100vh !important;
         background-color: #1E293B !important;
-        /* Matches your slate background */
         z-index: 99999 !important;
-        /* Pushes it above your content windows */
         transition: left 0.3s ease-in-out !important;
     }
-    /* 3. Sliding class: when active, pushes the sidebar onto the screen view */
+    /* Toggled open drawer state via JavaScript */
     nav.mobile-open {
         left: 0 !important;
     }
-    /* 4. Force main-content window layout container to expand to full size */
+    /* Remove the conflicting fixed bottom bar layout since you are using a drawer */
+    .sidebar {
+        position: static !important;
+        width: auto !important;
+        height: auto !important;
+        box-shadow: none !important;
+    }
+    /* 3. Global Structure & Spacing Adjustments */
     .main-wrapper {
         display: block !important;
     }
     .main-content {
         margin-left: 0 !important;
         width: 100% !important;
+    }
+    .content {
         padding: 15px !important;
+    }
+    /* 4. Optimized Header Mechanics */
+    header {
+        flex-wrap: wrap !important;
+        /* Lets profile elements stack safely if squished */
+        gap: 12px !important;
+        padding: 15px !important;
+    }
+    .header-title {
+        font-size: 20px !important;
+        /* Scale down from 28px desktop format */
+    }
+    /* 5. Responsive Flex & Grid Systems */
+    .grid-2,
+    .grid-3,
+    .grid-4,
+    .grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    .pos-container {
+        flex-direction: column !important;
+    }
+    .pos-products,
+    .pos-cart {
+        width: 100% !important;
+    }
+    /* 6. Fluid Search Component Stacking */
+    .search-wrapper {
+        width: 100% !important;
+        order: 2;
+        /* Drops search bar gracefully under the app title */
+    }
+    /* 7. Safe Data Table Finger Scrolling Framework */
+    .table {
+        font-size: 13px !important;
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        /* Unlocks horizontal swipe boundaries */
+        -webkit-overflow-scrolling: touch !important;
+    }
+    .table th,
+    .table td {
+        padding: 10px 8px !important;
+        white-space: nowrap !important;
+        /* Keeps row cells cleanly formatted */
+    }
+    /* 8. Responsive Modals & Stacking Forms */
+    .modal-content {
+        width: 92% !important;
+        max-width: 100% !important;
+        margin: 20px auto !important;
+        padding: 20px !important;
+    }
+    .form-group {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 6px !important;
+    }
+    /* 9. Finger Tap Sizing Guidelines */
+    .table-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 6px !important;
+    }
+    .table-actions .btn,
+    .table td .btn {
+        padding: 10px 14px !important;
+        margin: 0 !important;
+        font-size: 13px !important;
+        display: inline-flex !important;
+    }
+    /* 10. Kill Sticky Mobile Touch Hover Elements */
+    .table tbody tr:hover,
+    nav ul li a:hover {
+        background-color: transparent !important;
+        color: inherit !important;
+    }
+    /* Ensure dedicated navigation status tracking stays visible */
+    nav ul li a.active {
+        background-color: var(--primary-color) !important;
+        color: var(--dark-color) !important;
+    }
+    /* Add these inside your existing @media screen and (max-width: 768px) block */
+    /* 1. Prevent the Shopping Cart card itself from breaking containment */
+    .pos-cart,
+    #cartContainer,
+    .shopping-cart-card-class-name {
+        /* Replace with your actual cart wrapper class if different */
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 10px !important;
+        /* Slightly reduce padding on mobile to save space */
+        overflow: hidden !important;
+    }
+    /* 2. Isolate the inner cart item table into its own horizontal scroll box */
+    .pos-cart table,
+    .shopping-cart-table-class {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        margin-bottom: 15px !important;
+    }
+    /* 3. Give table cells a compact size rule so text/inputs sit cleanly */
+    .pos-cart th,
+    .pos-cart td {
+        padding: 6px 4px !important;
+        /* Tighter padding for mobile screens */
+        font-size: 13px !important;
+    }
+    /* 4. Optimize the item quantity inputs inside the cart table row */
+    .pos-cart table input[type="number"] {
+        width: 50px !important;
+        /* Keeps the Qty input box compact */
+        padding: 6px !important;
+        font-size: 13px !important;
+        text-align: center;
+    }
+    /* 5. Fix the subtotal/discount layout summary labels below the table */
+    .pos-cart .flex-between,
+    .pos-cart div[style*="justify-content: space-between"] {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        /* Keeps name and value on the same line */
+        width: 100% !important;
+        padding: 4px 0 !important;
+    }
+    /* Add these inside your existing @media screen and (max-width: 768px) block */
+    /* Forces the table wrapper, body, and headers to take up full available width when empty */
+    .pos-cart table,
+    .table {
+        width: 100% !important;
+        min-width: 100% !important;
+        /* Forces it to fill space even if rows are empty */
+        display: table !important;
+        /* Keeps standard table distribution behavior on mobile */
+    }
+    .pos-cart table thead,
+    .pos-cart table tbody,
+    .pos-cart table tr {
+        width: 100% !important;
+        display: table-row-group !important;
+        /* Correct tabular system assignment */
+    }
+    .pos-cart table tr {
+        display: table-row !important;
+    }
+    .pos-cart th,
+    .pos-cart td {
+        display: table-cell !important;
+        text-align: left;
+        /* Keeps text aligned nicely */
+        vertical-align: middle;
+    }
+}
+
+
+/* Micro Smartphone Breakpoint rules */
+
+@media (max-width: 480px) {
+    html {
+        font-size: 14px;
+        /* Systematically downscales relative rem fonts */
     }
 }

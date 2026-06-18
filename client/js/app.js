@@ -300,7 +300,7 @@ async function loadPOS() {
                 </div>
                 <div id="productList"></div>
             </div>
-
+            
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Shopping Cart</h2>
@@ -912,79 +912,188 @@ async function loadSuppliers() {
     }
 }
 
-// Load Expenses
+// Helper to parse dates into local ISO strings (YYYY-MM-DD)
+function getLocalDateString(date) {
+    return date.toISOString().split('T')[0];
+}
+
+// Quick Macro Preset Selector for Statements
+function applyProfitTimePreset(presetType) {
+    const today = new Date();
+    let startDate, endDate;
+
+    switch (presetType) {
+        case 'day':
+            startDate = getLocalDateString(today);
+            endDate = getLocalDateString(today);
+            break;
+        case 'week':
+            // Automatically grabs the 7 full days row leading up to today
+            const lastWeek = new Date();
+            lastWeek.setDate(today.getDate() - 6);
+            startDate = getLocalDateString(lastWeek);
+            endDate = getLocalDateString(today);
+            break;
+        case 'month':
+            // First day of current month to today
+            startDate = getLocalDateString(new Date(today.getFullYear(), today.getMonth(), 1));
+            endDate = getLocalDateString(today);
+            break;
+        case 'year':
+            // January 1st of current year to today
+            startDate = getLocalDateString(new Date(today.getFullYear(), 0, 1));
+            endDate = getLocalDateString(today);
+            break;
+    }
+
+    // Set input values and reload the metrics view
+    document.getElementById('profitStartInput').value = startDate;
+    document.getElementById('profitEndInput').value = endDate;
+    refreshProfitStats();
+}
+
+// Pull metrics and refresh numbers instantly based on active parameters
+async function refreshProfitStats() {
+    const start = document.getElementById('profitStartInput').value;
+    const end = document.getElementById('profitEndInput').value;
+    
+    try {
+        const response = await fetch(`${API_BASE}/expenses/profit?start_date=${start}&end_date=${end}`);
+        const data = await response.json();
+
+        // Update the dashboard statistics counters
+        document.getElementById('statSalesVal').innerText = `₱${data.total_sales.toFixed(2)}`;
+        document.getElementById('statExpensesVal').innerText = `₱${data.total_expenses.toFixed(2)}`;
+        
+        const profitCard = document.getElementById('statProfitCard');
+        const profitVal = document.getElementById('statProfitVal');
+        profitVal.innerText = `₱${data.profit.toFixed(2)}`;
+
+        // Adjust health color coding dynamically
+        if (data.profit >= 0) {
+            profitCard.className = 'stat-card success';
+        } else {
+            profitCard.className = 'stat-card danger';
+        }
+    } catch (err) {
+        console.error('Failed refreshing metrics range counters:', err);
+    }
+}
+
+// Whole core function to load your mobile-responsive Expenses workspace layout
 async function loadExpenses() {
     const content = document.getElementById('content');
     content.innerHTML = '<div class="spinner"></div>';
 
     try {
-        const profitResponse = await fetch(`${API_BASE}/expenses/profit`);
-        const profit = await profitResponse.json();
-
         const expensesResponse = await fetch(`${API_BASE}/expenses`);
         const expenses = await expensesResponse.json();
 
+        // Default initial range inputs to today's date
+        const todayStr = getLocalDateString(new Date());
+
         const html = `
-            <div class="card-header">
-                <h1 class="card-title">Expenses & Profit</h1>
+            <style>
+                .responsive-header {
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    flex-wrap: wrap; 
+                    gap: 12px;
+                    margin-bottom: 15px;
+                }
+                .responsive-inputs {
+                    display: flex; 
+                    align-items: center; 
+                    gap: 10px; 
+                    flex-wrap: wrap;
+                }
+                .mobile-scroll-container {
+                    width: 100%;
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+                @media (max-width: 600px) {
+                    .responsive-header h1 { font-size: 1.5rem; width: 100%; }
+                    .responsive-header .btn { width: 100%; text-align: center; }
+                    .responsive-inputs { width: 100%; }
+                    .responsive-inputs input[type="date"] { flex-grow: 1; width: 100%; }
+                }
+            </style>
+
+            <div class="responsive-header">
+                <h1 class="card-title">💰 Expenses & Profit Ledger</h1>
                 <button class="btn btn-primary" onclick="openExpenseModal()">+ Add Expense</button>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px; padding: 15px; background: #F8FAFC; border: 1px solid #E2E8F0;">
+                <div class="responsive-inputs">
+                    <span style="font-weight: 600; font-size: 14px; color: #4B5563;">Filter Range:</span>
+                    <input type="date" id="profitStartInput" value="${todayStr}" onchange="refreshProfitStats()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-family: inherit; font-weight: 500;">
+                    <span style="font-weight: 600; color: #64748B;">to</span>
+                    <input type="date" id="profitEndInput" value="${todayStr}" onchange="refreshProfitStats()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-family: inherit; font-weight: 500;">
+                </div>
             </div>
 
             <div class="grid grid-3">
                 <div class="stat-card">
-                    <div class="stat-label">Total Sales</div>
-                    <div class="stat-value">₱${profit.total_sales.toFixed(2)}</div>
+                    <div class="stat-label">Total Sales Revenue</div>
+                    <div class="stat-value" id="statSalesVal">₱0.00</div>
                 </div>
                 <div class="stat-card accent">
                     <div class="stat-label">Total Expenses</div>
-                    <div class="stat-value">₱${profit.total_expenses.toFixed(2)}</div>
+                    <div class="stat-value" id="statExpensesVal">₱0.00</div>
                 </div>
-                <div class="stat-card ${profit.profit >= 0 ? 'success' : 'danger'}">
-                    <div class="stat-label">Profit</div>
-                    <div class="stat-value">₱${profit.profit.toFixed(2)}</div>
+                <div class="stat-card success" id="statProfitCard">
+                    <div class="stat-label">Calculated Profit</div>
+                    <div class="stat-value" id="statProfitVal">₱0.00</div>
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card" style="margin-top: 20px;">
                 <div class="card-header">
-                    <h2 class="card-title">Expenses</h2>
+                    <h2 class="card-title">All Logged Expenses</h2>
                 </div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Category</th>
-                            <th>Description</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${expenses.map(expense => `
+                <div class="mobile-scroll-container">
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td>${expense.id}</td>
-                                <td>${expense.category}</td>
-                                <td>${expense.description || '-'}</td>
-                                <td>₱${expense.amount.toFixed(2)}</td>
-                                <td>${new Date(expense.created_at).toLocaleString()}</td>
-                                <td>
-                                    <div class="table-actions">
-                                        <button class="btn btn-info btn-small" onclick="editExpense(${expense.id})">Edit</button>
-                                        <button class="btn btn-danger btn-small" onclick="deleteExpense(${expense.id})">Delete</button>
-                                    </div>
-                                </td>
+                                <th>ID</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Actions</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${expenses.map(expense => `
+                                <tr>
+                                    <td>${expense.id}</td>
+                                    <td><span class="badge" style="background:#E2E8F0; color:#1E293B; font-weight:600; padding:4px 8px; border-radius:4px;">${expense.category}</span></td>
+                                    <td>${expense.description || '-'}</td>
+                                    <td style="font-weight:600; color:#EF4444;">₱${expense.amount.toFixed(2)}</td>
+                                    <td style="white-space: nowrap;">${new Date(expense.created_at).toLocaleString()}</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-info btn-small" onclick="editExpense(${expense.id})">Edit</button>
+                                            <button class="btn btn-danger btn-small" onclick="deleteExpense(${expense.id})">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
 
         content.innerHTML = html;
+        refreshProfitStats();
+        
     } catch (error) {
-        console.error('Error loading expenses:', error);
-        content.innerHTML = '<div class="alert alert-danger">Error loading expenses</div>';
+        console.error('Error loading entire responsive expenses layer:', error);
+        content.innerHTML = '<div class="alert alert-danger">Error loading workspace parameters</div>';
     }
 }
 

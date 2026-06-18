@@ -80,24 +80,34 @@ const getProductByBarcode = async(req, res) => {
 // Create product
 const createProduct = async(req, res) => {
     try {
-        const { barcode, name, category, cost_price, selling_price, stock, reorder_level, image } = req.body;
+        // 💡 EXCLUDE 'stock' from req.body so nobody can inject an initial stock value here
+        const { barcode, name, category, cost_price, selling_price, reorder_level, image } = req.body;
 
-        if (!name || !category || !cost_price || !selling_price) {
-            return res.status(400).json({ error: 'Required fields missing' });
+        if (!name || !category || cost_price === undefined || selling_price === undefined) {
+            return res.status(400).json({ error: 'Name, category, cost price, and selling price are required' });
         }
 
-        const result = await dbRun(
-            'INSERT INTO products (barcode, name, category, cost_price, selling_price, stock, reorder_level, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [barcode || null, name, category, cost_price, selling_price, stock || 0, reorder_level || 10, image || null]
-        );
+        // 💡 FORCE stock to be 0 explicitly in the database insertion array
+        const query = `
+            INSERT INTO products (barcode, name, category, cost_price, selling_price, stock, reorder_level, image) 
+            VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+        `;
+
+        const result = await dbRun(query, [
+            barcode || null,
+            name,
+            category,
+            cost_price,
+            selling_price,
+            reorder_level !== undefined ? reorder_level : 10,
+            image || null
+        ]);
 
         res.json({
             success: true,
             productId: result.id
         });
     } catch (error) {
-        if (error.message.includes('UNIQUE constraint failed')) {
-            return res.status(400).json({ error: 'Barcode already exists' });
-        }
         console.error('Error creating product:', error);
         res.status(500).json({ error: 'Server error' });
     }
