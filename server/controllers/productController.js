@@ -81,7 +81,18 @@ const getProductByBarcode = async(req, res) => {
 const createProduct = async(req, res) => {
     try {
         // 💡 EXCLUDE 'stock' from req.body so nobody can inject an initial stock value here
-        const { barcode, name, category, cost_price, selling_price, reorder_level, image } = req.body;
+        const {
+            barcode,
+            name,
+            category,
+            cost_price,
+            selling_price,
+            reorder_level,
+            image,
+            has_bundle_promo,
+            bundle_qty,
+            bundle_price
+        } = req.body;
 
         if (!name || !category || cost_price === undefined || selling_price === undefined) {
             return res.status(400).json({ error: 'Name, category, cost price, and selling price are required' });
@@ -89,18 +100,15 @@ const createProduct = async(req, res) => {
 
         // 💡 FORCE stock to be 0 explicitly in the database insertion array
         const query = `
-            INSERT INTO products (barcode, name, category, cost_price, selling_price, stock, reorder_level, image) 
-            VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+            INSERT INTO products (barcode, name, category, cost_price, selling_price, stock, reorder_level, image, has_bundle_promo, bundle_qty, bundle_price) 
+            VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?)
         `;
 
         const result = await dbRun(query, [
-            barcode || null,
-            name,
-            category,
-            cost_price,
-            selling_price,
+            barcode || null, name, category, cost_price, selling_price,
             reorder_level !== undefined ? reorder_level : 10,
-            image || null
+            image || null,
+            has_bundle_promo || 0, bundle_qty || 0, bundle_price || 0
         ]);
 
         res.json({
@@ -117,14 +125,16 @@ const createProduct = async(req, res) => {
 const updateProduct = async(req, res) => {
     try {
         const { id } = req.params;
-        const { barcode, name, category, cost_price, selling_price, stock, reorder_level, image } = req.body;
+        const { barcode, name, category, cost_price, selling_price, stock, reorder_level, image, has_bundle_promo, bundle_qty, bundle_price } = req.body;
 
         if (!name || !category || !cost_price || !selling_price) {
             return res.status(400).json({ error: 'Required fields missing' });
         }
 
         await dbRun(
-            'UPDATE products SET barcode = ?, name = ?, category = ?, cost_price = ?, selling_price = ?, stock = ?, reorder_level = ?, image = ? WHERE id = ?', [barcode || null, name, category, cost_price, selling_price, stock || 0, reorder_level || 10, image || null, id]
+            'UPDATE products SET barcode=?, name=?, category=?, cost_price=?, selling_price=?, stock=?, reorder_level=?, image=?, has_bundle_promo=?, bundle_qty=?, bundle_price=? WHERE id=?', [barcode || null, name, category, cost_price, selling_price, stock || 0, reorder_level || 10, image || null,
+                has_bundle_promo || 0, bundle_qty || 0, bundle_price || 0, id
+            ]
         );
 
         res.json({ success: true });

@@ -422,11 +422,13 @@ async function searchPOSProducts() {
         const products = await response.json();
 
         const html = products.map(product => `
-            <div class="card mb-10" style="cursor: pointer;" onclick="addToCart(${product.id}, '${product.name}', ${product.selling_price}, ${product.stock})">
+            <div class="card mb-10" style="cursor: pointer;" 
+                onclick="addToCart(${product.id}, '${product.name}', ${product.selling_price}, ${product.stock}, ${product.has_bundle_promo || 0}, ${product.bundle_qty || 0}, ${product.bundle_price || 0})">
                 <div class="flex-between">
                     <div>
                         <strong>${product.name}</strong>
-                        <div class="text-muted">₱${product.selling_price.toFixed(2)}</div>
+                        <div class="text-muted">₱${product.selling_price.toFixed(2)} / piece</div>
+                        ${product.has_bundle_promo ? `<div style="color:#16A34A; font-size:12px; font-weight:600;">🏷️ Bundle: ${product.bundle_qty} pcs for ₱${product.bundle_price.toFixed(2)}</div>` : ''}
                     </div>
                     <div class="text-right">
                         <div>Stock: ${product.stock}</div>
@@ -442,7 +444,7 @@ async function searchPOSProducts() {
 }
 
 // Add to cart
-function addToCart(productId, name, price, stock) {
+function addToCart(productId, name, price, stock, hasBundlePromo, bundleQty, bundlePrice) {
     let cart = JSON.parse(localStorage.getItem('posCart') || '[]');
     const existingItem = cart.find(item => item.product_id === productId);
 
@@ -456,7 +458,10 @@ function addToCart(productId, name, price, stock) {
             name: name,
             price: price,
             quantity: 1,
-            stock: stock
+            stock: stock,
+            has_bundle_promo: hasBundlePromo || 0,
+            bundle_qty: bundleQty || 0,
+            bundle_price: bundlePrice || 0
         });
     }
 
@@ -464,25 +469,40 @@ function addToCart(productId, name, price, stock) {
     updatePOSCart();
 }
 
-// Update POS cart display
+function calculateItemTotal(item) {
+    if (item.has_bundle_promo && item.bundle_qty > 0 && item.quantity >= item.bundle_qty) {
+        const bundles = Math.floor(item.quantity / item.bundle_qty);
+        const loose = item.quantity % item.bundle_qty;
+        return (bundles * item.bundle_price) + (loose * item.price);
+    }
+    return item.price * item.quantity;
+}
+
 function updatePOSCart() {
     const cart = JSON.parse(localStorage.getItem('posCart') || '[]');
     const cartItems = document.getElementById('cartItems');
 
-    const html = cart.map((item, index) => `
-        <tr>
-            <td>${item.name}</td>
-            <td>
-                <input type="number" min="1" max="${item.stock}" value="${item.quantity}" 
-                    onchange="updateCartQuantity(${index}, this.value)" style="width: 100px;">
-            </td>
-            <td>₱${item.price.toFixed(2)}</td>
-            <td>₱${(item.price * item.quantity).toFixed(2)}</td>
-            <td>
-                <button class="btn btn-danger btn-small" onclick="removeFromCart(${index})">Remove</button>
-            </td>
-        </tr>
-    `).join('');
+    const html = cart.map((item, index) => {
+        const lineTotal = calculateItemTotal(item);
+        const bundleLabel = item.has_bundle_promo && item.quantity >= item.bundle_qty
+            ? `<div style="font-size:11px; color:#16A34A;">🏷️ Bundle applied</div>`
+            : '';
+
+        return `
+            <tr>
+                <td>${item.name}${bundleLabel}</td>
+                <td>
+                    <input type="number" min="1" max="${item.stock}" value="${item.quantity}" 
+                        onchange="updateCartQuantity(${index}, this.value)" style="width: 60px;">
+                </td>
+                <td>₱${item.price.toFixed(2)}</td>
+                <td>₱${lineTotal.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-danger btn-small" onclick="removeFromCart(${index})">Remove</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
     cartItems.innerHTML = html;
     updatePOSTotal();
@@ -509,7 +529,7 @@ function updatePOSTotal() {
     const cart = JSON.parse(localStorage.getItem('posCart') || '[]');
     const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
 
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = cart.reduce((sum, item) => sum + calculateItemTotal(item), 0);
     const discountAmount = (subtotal * discountPercent) / 100;
     const total = subtotal - discountAmount;
 
@@ -1195,6 +1215,7 @@ function openProductModal() {
     document.getElementById('productForm').reset();
     document.getElementById('productId').value = '';
     document.getElementById('productModalTitle').innerText = '🏷️ Add New Product';
+    document.getElementById('bundleFields').style.display = 'none'; // reset
     showSystemModal('productModal');
 }
 
@@ -1210,6 +1231,14 @@ async function editProduct(id) {
         document.getElementById('productSellingPrice').value = p.selling_price;
         document.getElementById('productStock').value = p.stock;
         document.getElementById('productReorder').value = p.reorder_level;
+
+        // Bundle fields
+        const hasBundle = p.has_bundle_promo === 1;
+        document.getElementById('productHasBundle').checked = hasBundle;
+        document.getElementById('productBundleQty').value = p.bundle_qty || 3;
+        document.getElementById('productBundlePrice').value = p.bundle_price || 0;
+        document.getElementById('bundleFields').style.display = hasBundle ? 'block' : 'none';
+
         document.getElementById('productModalTitle').innerText = '📝 Edit Product';
         showSystemModal('productModal');
     } catch (err) { console.error(err); }
@@ -1335,9 +1364,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('stockInForm')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
-            product_id: parseInt(document.getElementById('stockInProduct').value),
-            quantity: parseInt(document.getElementById('stockInQty').value),
-            remarks: document.getElementById('stockInRemarks').value || 'Stock In'
+            barcode: document.getElementById('productBarcode').value || null,
+            name: document.getElementById('productName').value,
+            category: document.getElementById('productCategory').value,
+            cost_price: parseFloat(document.getElementById('productCostPrice').value),
+            selling_price: parseFloat(document.getElementById('productSellingPrice').value),
+            stock: parseInt(document.getElementById('productStock').value),
+            reorder_level: parseInt(document.getElementById('productReorder').value),
+            // Bundle fields
+            has_bundle_promo: document.getElementById('productHasBundle').checked ? 1 : 0,
+            bundle_qty: parseInt(document.getElementById('productBundleQty').value) || 0,
+            bundle_price: parseFloat(document.getElementById('productBundlePrice').value) || 0
         };
         const res = await fetch('/api/inventory/stock-in', {
             method: 'POST',
@@ -1614,3 +1651,9 @@ document.addEventListener('click', (event) => {
         }
     }
 });
+
+
+function toggleBundleFields() {
+    const enabled = document.getElementById('productHasBundle').checked;
+    document.getElementById('bundleFields').style.display = enabled ? 'block' : 'none';
+}

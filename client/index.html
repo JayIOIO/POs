@@ -163,8 +163,8 @@
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <div style="flex: 1;">
-                        <label style="display:block; margin-bottom:2px;">Cost Price (₱)</label>
-                        <input type="number" step="0.01" id="productCostPrice" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" required>
+                        <label style="display:block; margin-bottom:2px;">Cost Price (₱) </label>
+                        <input type="number" step="0.01" id="productCostPrice" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="Pack Price/#ofPieces" required>
                     </div>
                     <div style="flex: 1;">
                         <label style="display:block; margin-bottom:2px;">Selling Price (₱)</label>
@@ -180,6 +180,26 @@
                         <label style="display:block; margin-bottom:2px;">Reorder Level</label>
                         <input type="number" id="productReorder" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" value="10" required>
                     </div>
+                </div>
+                <!-- Bundle Promo Section -->
+                <div style="margin-bottom: 10px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+        <input type="checkbox" id="productHasBundle" onchange="toggleBundleFields()">
+        Enable Bundle Promo (e.g. 3 for ₱5)
+    </label>
+                </div>
+                <div id="bundleFields" style="display:none; background:#F3F4F6; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <label style="display:block; margin-bottom:2px;">Bundle Qty (e.g. 3)</label>
+                            <input type="number" id="productBundleQty" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" min="2" value="3">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="display:block; margin-bottom:2px;">Bundle Price ₱ (e.g. 5)</label>
+                            <input type="number" step="0.01" id="productBundlePrice" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" value="0">
+                        </div>
+                    </div>
+                    <small style="color:#6B7280;">Single price is still used for quantities below the bundle threshold.</small>
                 </div>
                 <div style="display:flex; gap:10px; justify-content:flex-end;">
                     <button type="button" onclick="document.getElementById('productModal').style.display='none'" style="padding:6px 12px;">Cancel</button>
