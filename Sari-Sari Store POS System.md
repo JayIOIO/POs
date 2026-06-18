@@ -280,3 +280,60 @@ Version 1.0.0 - Initial Release
 ---
 
 **Happy selling! 🏪**
+
+
+Step 1 — Install Termux
+Download Termux from F-Droid (not Play Store, that version is outdated):
+
+👉 https://f-droid.org/en/packages/com.termux/
+
+Step 2 — Update Termux & Install Node.js
+Open Termux and run these one by one:
+bashpkg update && pkg upgrade
+bashpkg install nodejs
+bashpkg install git
+Check if installed:
+bashnode -v
+npm -v
+
+Step 3 — Get Your Project Into Termux
+Option A — If project is on GitHub:
+bashgit clone https://github.com/yourusername/your-repo.git
+cd your-repo
+Option B — If project is on your phone's storage:
+bashtermux-setup-storage
+Then copy your project folder to Termux:
+bashcp -r /sdcard/your-project-folder ~/your-project
+cd ~/your-project
+
+Step 4 — Install Dependencies
+bashnpm install
+
+Step 5 — Run the Server
+bashnode server/server.js
+You should see:
+Sari-Sari POS Server running on http://localhost:3000
+
+Step 6 — Open in Browser
+Open your phone's browser (Chrome) and go to:
+http://localhost:3000
+Login with:
+
+Username: admin
+Password: admin123
+
+
+Tips
+Keep server running while using other apps:
+
+Install a Termux wake lock so it doesn't stop in background:
+bashtermux-wake-lock
+To stop the server:
+
+Press Ctrl + C in Termux
+If port 3000 is busy:
+bashnode server/server.js &
+Or change the port in server.js to 8080
+Next time you want to run it, just open Termux and:
+bashcd ~/your-project
+node server/server.js
